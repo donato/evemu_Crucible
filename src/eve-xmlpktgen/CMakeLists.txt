@@ -52,8 +52,12 @@ IF( NOT EVEMU_TARGETS_IMPORT )
   TARGET_INCLUDE_DIRECTORIES( "${TARGET_NAME}"
                               ${eve-core_INCLUDE_DIRS}
                               "${TARGET_INCLUDE_DIR}" )
-  TARGET_LINK_LIBRARIES( "${TARGET_NAME}"
-                         "eve-core" )
+  TARGET_LINK_LIBRARIES(
+    "${TARGET_NAME}"
+    PRIVATE
+      "eve-core"
+      ${TINYXML_LIBRARIES}
+  )
 
   IF( EVEMU_TARGETS_EXPORT )
     EXPORT( TARGETS "${TARGET_NAME}"

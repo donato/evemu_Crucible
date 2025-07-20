@@ -152,11 +152,13 @@ TARGET_INCLUDE_DIRECTORIES( "${TARGET_NAME}"
                             ${TINYXML_INCLUDE_DIRS}
                             "${ZLIB_INCLUDE_DIR}"
                             "${TARGET_INCLUDE_DIR}" )
-TARGET_LINK_LIBRARIES( "${TARGET_NAME}"
-                       ${Boost_LIBRARIES}
-                       ${MYSQL_LIBRARIES}
-                       ${GANGSTA_LIBRARIES}
-                       ${TINYXML_LIBRARIES}
-                       "${ZLIB_LIBRARY}"
-                       ${CMAKE_NET_LIBS}
-                       ${CMAKE_THREAD_LIBS} )
+TARGET_LINK_LIBRARIES(
+  "${TARGET_NAME}"
+  PUBLIC
+    ${MYSQL_LIBRARIES}
+  PRIVATE
+    ${GANGSTA_LIBRARIES}
+    ZLIB::ZLIB       
+    ${TINYXML_LIBRARIES}
+    Threads::Threads
+)

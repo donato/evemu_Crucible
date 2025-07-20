@@ -1,26 +1,18 @@
-#
-# CMake build system file for EVEmu.
-#
-# Author: Bloody.Rabbit
-# Updates:  Allan
-#
-
 ###############
 # CMake setup #
 ###############
-# We need a target-specific property INCLUDE_DIRECTORIES which
-# is part of CMake 2.8.8 and later.
-CMAKE_MINIMUM_REQUIRED( VERSION 2.8.8 FATAL_ERROR )
+CMAKE_MINIMUM_REQUIRED( VERSION 3.15 FATAL_ERROR )
 
-PROJECT( "evemu" )
-SET( PROJECT_DESCRIPTION_SUMMARY "A server emulator for EVE Online" )
-SET( PROJECT_VENDOR              "The EVEmu development team" )
-SET( PROJECT_VERSION             "this is not used anymore, CMake pulls version from Git Tree Info (cmake/GitTreeInfo.cmake)" )
-SET( PROJECT_REPOSITORY          "https://github.com/EvEmu-Project/evemu_Crucible" )
+project(evemu
+    VERSION "0.0.0" # This will be overwritten by Git info later
+    DESCRIPTION "A server emulator for EVE Online"
+    HOMEPAGE_URL "https://github.com/EvEmu-Project/evemu_Crucible"
+    LANGUAGES CXX
+)
 
 # Append our module path
-LIST( APPEND CMAKE_MODULE_PATH
-      "${PROJECT_SOURCE_DIR}/cmake" )
+list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake" )
+
 # Enable testing with CTest
 ENABLE_TESTING()
 
@@ -55,23 +47,20 @@ MARK_AS_ADVANCED(
 #################
 INCLUDE( "DetectScm" )
 
-#
-# Setup some recommended compiler flags.
-#
-# Intentionally specify the CMAKE_CXX_FLAGS as last to allow user
-# override the setup.
-#
-# Switch to the C++11 standard (required)
+# Switch to the C++11 standard
+set (CMAKE_CXX_STANDARD 17)
+
+# Recommended compiler flags. Note that user-specified CMAKE_CXX_FLAGS will be 
+# added at the end, to allow overriding the setup.
 IF (WIN32)
-  set (CMAKE_CXX_STANDARD 17)
   SET( CMAKE_CXX_FLAGS "/permissive- -DHAVE_WINDOWS_H -DHAVE_WINSOCK2_H /DEBUG /Zi ${CMAKE_CXX_FLAGS}" )
   link_libraries(DbgHelp.lib)
 ELSE()
+  # -std=gnu++17 assuming we need some GNU extensions, however -std=c++17 would
+  # be more common.
+
   SET( CMAKE_CXX_FLAGS "-std=gnu++17 -march=native -Werror=return-type -fabi-version=14 ${CMAKE_CXX_FLAGS}" )
 ENDIF()
-# -Wall -Wextra -Weffc++ -Wconversion -Wdouble-promotion
-# -pg -ggdb -pedantic
-# -fsanitize=thread  -fsanitize=address
 
 #
 # Try to determine the exact source version using SCM.
@@ -112,9 +101,9 @@ IF( SCM_VERSION AND SCM_REPOSITORY )
 
 ENDIF( SCM_VERSION AND SCM_REPOSITORY )
 
-#########
-# Tests #
-#########
+##########################
+# Test build environment #
+##########################
 INCLUDE( "CheckCXXSourceCompiles" )
 INCLUDE( "CheckCXXSymbolExists" )
 INCLUDE( "CheckIncludeFileCXX" )
@@ -128,12 +117,11 @@ CHECK_INCLUDE_FILE_CXX( "vld.h"      HAVE_VLD_H )
 
 # Keywords
 CHECK_CXX_SOURCE_COMPILES(
-  "int main() { __asm int 3 }\n"
+  "int main() { __asm int 3; return 0; }\n"
   HAVE___ASM )
 
 # cfloat, cmath
 CHECK_CXX_SYMBOL_EXISTS( asinh    "cmath"  HAVE_ASINH )
-CHECK_CXX_SYMBOL_EXISTS( finite   "cmath"  HAVE_FINITE )
 CHECK_CXX_SYMBOL_EXISTS( isfinite "cmath"  HAVE_ISFINITE )
 CHECK_CXX_SYMBOL_EXISTS( isnan    "cmath"  HAVE_ISNAN )
 CHECK_CXX_SYMBOL_EXISTS( _finite  "cfloat" HAVE__FINITE )
@@ -154,8 +142,8 @@ CHECK_CXX_SYMBOL_EXISTS( va_copy "cstdarg" HAVE_VA_COPY )
 # cstdio
 CHECK_CXX_SYMBOL_EXISTS(  snprintf "cstdio" HAVE_SNPRINTF )
 CHECK_CXX_SYMBOL_EXISTS( vsnprintf "cstdio" HAVE_VSNPRINTF )
-CHECK_CXX_SYMBOL_EXISTS(  asprintf "cstdio" HAVE_ASPRINTF )
-CHECK_CXX_SYMBOL_EXISTS( vasprintf "cstdio" HAVE_VASPRINTF )
+CHECK_CXX_SYMBOL_EXISTS(  asprintf "cstdio" HAVE_ASPRINTF ) # GNU extension
+CHECK_CXX_SYMBOL_EXISTS( vasprintf "cstdio" HAVE_VASPRINTF ) # GNU extension
 
 # cstdlib
 CHECK_CXX_SYMBOL_EXISTS( strtoll  "cstdlib" HAVE_STRTOLL )
@@ -174,24 +162,28 @@ CHECK_CXX_SYMBOL_EXISTS( localtime_s "ctime" HAVE_LOCALTIME_S )
 ############
 # Packages #
 ############
+
+find_package(MySQL REQUIRED)
+find_package(Boost 1.70 COMPONENTS system filesystem REQUIRED)
+find_package(ZLIB REQUIRED)
+find_package("Threads" REQUIRED)
+
+# UTF8CPP
+FetchContent_Declare(
+    UTF8CPP_External
+    GIT_REPOSITORY "https://github.com/nemtrif/utfcpp.git"
+    GIT_TAG "v3.1.1" # Use a specific stable tag or commit hash
+)
+FetchContent_MakeAvailable(UTF8CPP_External)
+
+
+# TODO - migrate from TinyXML to TinyXML2 then remove the legacy build files
 INCLUDE( "BuildPackage" )
-
-
-BUILD_PACKAGE( "Boost" )
 BUILD_PACKAGE( "MySQL" )
 BUILD_PACKAGE( "TinyXML" )
-BUILD_PACKAGE( "UTF8CPP" )
-BUILD_PACKAGE( "ZLIB" )
-
-FIND_PACKAGE( "Threads" REQUIRED )
 
 ADD_SUBDIRECTORY( "dep/gangsta" )
 ADD_SUBDIRECTORY( "dep/utils" )
-
-SET( CMAKE_NET_LIBS
-  "${CMAKE_NET_LIBS_INIT}" )
-SET( CMAKE_THREAD_LIBS
-  "${CMAKE_THREAD_LIBS_INIT}" )
 
 MARK_AS_ADVANCED(
   Boost_DIR

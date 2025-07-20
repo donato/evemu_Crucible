@@ -272,6 +272,9 @@ TARGET_INCLUDE_DIRECTORIES( "${TARGET_NAME}"
                             ${eve-core_INCLUDE_DIRS}
                             "${TARGET_INCLUDE_DIR}"
                             "${TARGET_PACKETS_DIR}" )
-TARGET_LINK_LIBRARIES( "${TARGET_NAME}"
-                       ${UTILS_LIBRARIES}
-                       "eve-core" )
+TARGET_LINK_LIBRARIES(
+  "${TARGET_NAME}"
+  PRIVATE
+    ${UTILS_LIBRARIES}
+    "eve-core"
+)
