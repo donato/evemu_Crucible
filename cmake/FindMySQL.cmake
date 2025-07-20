@@ -13,13 +13,27 @@
 IF( WIN32 )
   LIST( APPEND MYSQL_NAMES "libmariadb" )
 ELSE( WIN32 )
-  LIST( APPEND MYSQL_NAMES "mysqlclient_r" "mysqlclient" )
+  LIST( APPEND MYSQL_NAMES "mysqlclient_r" "mysqlclient" "mariadbclient")
 ENDIF( WIN32 )
 
 FIND_PATH(
-  MYSQL_INCLUDE_DIRS "mysql.h"
-  PATH_SUFFIXES "mysql"
-  )
+  MYSQL_INCLUDE_DIRS
+  NAMES
+    "mysql.h"
+  PATHS
+    ${MYSQL_ADD_INCLUDE_PATH}
+    /usr/include
+    /usr/include/mariadb
+    /usr/include/mysql
+    /usr/local/include
+    /usr/local/include/mysql
+    /usr/local/mysql/include
+  PATH_SUFFIXES
+    include
+    include/mysql
+  DOC
+    "Specify the directory containing mysql.h."
+)
 FIND_LIBRARY(
   MYSQL_LIBRARIES
   NAMES ${MYSQL_NAMES}
