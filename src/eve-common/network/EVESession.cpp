@@ -36,7 +36,7 @@
 #include "EVEVersion.h"
 
 EVEClientSession::EVEClientSession(EVETCPConnection** n)
-: mNet(*n), mPacketHandler(&EVEClientSession:_HandleVersion) {
+: mNet(*n), mPacketHandler(&EVEClientSession::_HandleVersion) {
     *n = nullptr;
 }
 
